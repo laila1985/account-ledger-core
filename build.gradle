@@ -1,0 +1,46 @@
+plugins {
+	id 'java'
+	id 'application'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// No web layer, no persistence, no database: plain JUnit 5 only.
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.3'
+}
+
+application {
+	// Replays the fixed event stream and prints the daily report.
+	mainClass = 'com.example.ledger.AccountLedgerCore'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	// KnownLimitationTest is the single, deliberately failing test that documents
+	// a known design limitation (see the file's comments and REJECTED.md). It is
+	// excluded from the default suite so the main build stays green; run it with:
+	//     gradlew knownFailureTest
+	exclude '**/KnownLimitationTest.class'
+}
+
+tasks.register('knownFailureTest', Test) {
+	group = 'verification'
+	description = 'Runs the deliberately failing test that documents a known design limitation.'
+	useJUnitPlatform()
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	include '**/KnownLimitationTest.class'
+}
